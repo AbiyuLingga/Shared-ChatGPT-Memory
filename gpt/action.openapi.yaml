@@ -1,0 +1,158 @@
+openapi: 3.1.0
+info:
+  title: Shared Memory Actions
+  version: 1.0.0
+  description: OAuth-protected shared memory actions for the Custom GPT.
+servers:
+  - url: https://YOUR-RAILWAY-DOMAIN.example
+security:
+  - bearerAuth: []
+paths:
+  /v1/memories/search:
+    post:
+      operationId: searchSharedMemory
+      summary: Search shared memory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              additionalProperties: false
+              properties:
+                query: { type: string, minLength: 1, maxLength: 1000 }
+      responses:
+        '200':
+          description: Matching memory summaries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+  /v1/memories:
+    post:
+      operationId: addSharedMemory
+      summary: Add an explicitly requested memory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fact, memory_type]
+              additionalProperties: false
+              properties:
+                fact: { type: string, minLength: 1, maxLength: 1500 }
+                memory_type:
+                  type: string
+                  enum: [preference, project, decision, workflow, personal_context, other]
+      responses:
+        '200':
+          description: Accepted status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AddResponse' }
+  /v1/memory-changes/preview:
+    post:
+      operationId: previewMemoryChange
+      summary: Preview an update or delete before confirmation
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [operation, memory_id]
+              additionalProperties: false
+              properties:
+                operation: { type: string, enum: [update, delete] }
+                memory_id: { type: string, format: uuid }
+                replacement_fact:
+                  anyOf:
+                    - { type: string, minLength: 1, maxLength: 1500 }
+                    - { type: 'null' }
+      responses:
+        '200':
+          description: Confirmation preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreviewResponse' }
+  /v1/memory-changes/confirm:
+    post:
+      operationId: confirmMemoryChange
+      summary: Confirm a preview on a later turn
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [change_id]
+              additionalProperties: false
+              properties:
+                change_id: { type: string, minLength: 32, maxLength: 256 }
+      responses:
+        '200':
+          description: Applied change
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConfirmResponse' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Memory:
+      type: object
+      required: [id, memory, score, categories, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        memory: { type: string }
+        score:
+          anyOf: [{ type: number }, { type: 'null' }]
+        categories: { type: array, items: { type: string } }
+        created_at:
+          anyOf: [{ type: string, format: date-time }, { type: 'null' }]
+        updated_at:
+          anyOf: [{ type: string, format: date-time }, { type: 'null' }]
+    SearchResponse:
+      type: object
+      required: [count, memories]
+      properties:
+        count: { type: integer }
+        memories: { type: array, items: { $ref: '#/components/schemas/Memory' } }
+    AddResponse:
+      type: object
+      required: [accepted, completed, status, search_may_lag]
+      properties:
+        accepted: { type: boolean }
+        completed: { type: boolean }
+        status: { type: string, enum: [SUCCEEDED, PENDING, FAILED, UNKNOWN, ALREADY_EXISTS] }
+        search_may_lag: { type: boolean }
+    PreviewResponse:
+      type: object
+      required: [change_id, operation, current_memory, confirmation_required, expires_in_seconds]
+      properties:
+        change_id: { type: string }
+        operation: { type: string, enum: [update, delete] }
+        current_memory: { type: string }
+        replacement_fact:
+          anyOf: [{ type: string }, { type: 'null' }]
+        confirmation_required: { type: boolean }
+        expires_in_seconds: { type: integer }
+    ConfirmResponse:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+        memory:
+          anyOf:
+            - { $ref: '#/components/schemas/Memory' }
+            - { type: 'null' }
