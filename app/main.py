@@ -7,7 +7,7 @@ from typing import AsyncIterator, Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
 
-from app.auth import Authenticator
+from app.auth import ActionAuthenticator
 from app.config import Settings, get_settings
 from app.mem0_client import Mem0Client
 from app.rate_limit import RateLimiter
@@ -21,7 +21,7 @@ def create_app(
     settings: Settings | None = None,
     *,
     mem0_client: Mem0Client | None = None,
-    authenticator: Authenticator | None = None,
+    authenticator: ActionAuthenticator | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     client = mem0_client or Mem0Client(
@@ -54,7 +54,7 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.settings = settings
-    app.state.authenticator = authenticator or Authenticator(settings=settings)
+    app.state.authenticator = authenticator or ActionAuthenticator(settings=settings)
     app.state.memory_service = memory_service
     app.state.change_service = change_service
     app.state.rate_limiter = RateLimiter()

@@ -16,9 +16,7 @@ def settings(environment: str = "test") -> Settings:
     return Settings(
         mem0_api_key="not-a-real-key",
         memory_vault_id=VAULT,
-        auth0_domain="tenant.example.com",
-        auth0_audience="https://api.example.com",
-        auth0_allowed_subjects={"auth0|alice"},
+        action_api_key="action-secret",
         change_token_secret="x" * 32,
         environment=environment,
     )
@@ -30,7 +28,7 @@ class FakeAuth:
             raise HTTPException(
                 401, "Invalid or missing bearer token", {"WWW-Authenticate": "Bearer"}
             )
-        return {"sub": "auth0|alice"}
+        return {"sub": "personal"}
 
 
 class FakeClient:
@@ -86,6 +84,18 @@ def test_public_endpoints_and_production_docs():
         assert client.get("/privacy").status_code == 200
         assert client.get("/docs").status_code == 404
         assert client.get("/openapi.json").status_code == 404
+
+
+def test_app_factory_enforces_static_action_key():
+    app = create_app(settings(), mem0_client=FakeClient())
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/memories/search",
+            json={"query": "anything"},
+            headers={"Authorization": "Bearer wrong"},
+        )
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
 
 
 def test_search_is_safe_and_does_not_accept_vault_selector(client_and_fake):

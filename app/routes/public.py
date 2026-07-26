@@ -14,8 +14,8 @@ async def privacy(request: Request) -> str:
     contact = request.app.state.settings.contact_email or "the service owner"
     return (
         "Shared Memory privacy notice\n\n"
-        "This service processes OAuth login through Auth0 and explicitly requested, "
-        "non-sensitive shared memory through Mem0. All allowlisted accounts share "
+        "This service processes explicitly requested, non-sensitive shared memory "
+        "through Mem0. All authorized users share "
         "one vault. Do not submit secrets, payment, health, or confidential data.\n\n"
         f"Contact: {contact}\n"
     )
