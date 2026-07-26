@@ -1,11 +1,11 @@
 # Privacy notice
 
-The Custom GPT sends requested shared-memory actions to this service. Auth0
-processes login through the configured Google or email/password connection.
+The Custom GPT sends requested shared-memory actions to this service. Access
+uses a private API key configured in the GPT Action.
 Mem0 stores only the non-sensitive facts that users explicitly ask the GPT to
 remember, plus minimal server metadata for type and audit safety.
 
-All allowlisted subjects share one vault by design. The service does not accept
+All authorized users share one vault by design. The service does not accept
 client-selected user IDs or vault IDs. Users should not submit secrets,
 financial information, health data, company-confidential material, or complete
 documents.

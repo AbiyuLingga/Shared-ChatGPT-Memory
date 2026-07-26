@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Shared Memory Actions
   version: 1.0.0
-  description: OAuth-protected shared memory actions for the Custom GPT.
+  description: Bearer API-key protected shared memory actions for the Custom GPT.
 servers:
   - url: https://YOUR-RAILWAY-DOMAIN.example
 security:
@@ -107,7 +107,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      description: Use the static ACTION_API_KEY configured for this personal GPT.
   schemas:
     Memory:
       type: object

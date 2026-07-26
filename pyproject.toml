@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "shared-chatgpt-memory"
 version = "0.1.0"
-description = "OAuth-protected shared Mem0 memory backend for a Custom GPT"
+description = "Bearer-key-protected shared Mem0 memory backend for a Custom GPT"
 requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
