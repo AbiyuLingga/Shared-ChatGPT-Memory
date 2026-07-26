@@ -1,32 +1,82 @@
-# Shared ChatGPT + Mem0 memory
+# Shared ChatGPT Memory
 
-This is a small FastAPI adapter for one Custom GPT and one shared Mem0 vault.
-Every Action is protected by one server-side bearer API key; the client cannot
-select a user or vault.
+A small FastAPI service that connects a Custom GPT to one shared Mem0 memory
+vault.
 
-## Local checks
+Use it for preferences, decisions, workflows, and light project context. For
+example:
+
+> "Remember that I prefer short and direct answers."
+
+## How it works
+
+```text
+ChatGPT Custom GPT -> FastAPI backend -> Mem0
+```
+
+The Custom GPT searches relevant memories and saves new memories when needed.
+Changes and deletions use a preview/confirm workflow.
+
+## Quick setup
+
+1. Deploy the repository to a public HTTPS host such as Railway.
+2. Add the variables from [.env.example](.env.example).
+3. Check the deployment:
+
+   ```text
+   https://your-domain/health
+   https://your-domain/privacy
+   ```
+
+4. In the Custom GPT editor, open **Configure -> Actions -> Create new action**.
+5. Import [gpt/action.openapi.yaml](gpt/action.openapi.yaml).
+6. Replace the `servers` URL with your public backend URL.
+7. Configure authentication as **API Key -> Bearer** using your server's
+   `ACTION_API_KEY`.
+8. Copy [gpt/instructions.md](gpt/instructions.md) into the GPT's
+   **Instructions** field.
+9. Set the Privacy Policy URL to `https://your-domain/privacy`.
+
+The complete checklist is in [gpt/manual_setup_checklist.md](gpt/manual_setup_checklist.md).
+
+## Example prompts
+
+- "Remember that I prefer short and direct answers."
+- "What do you remember about my answer style?"
+- "Change my answer preference to short, critical, and direct."
+- "Forget my answer preference."
+
+GPT Actions may not run on every message. When an Action is unavailable, the GPT
+continues using the current conversation context.
+
+## Local development
 
 ```text
 python -m pip install -r requirements-dev.txt
+uvicorn app.main:app --factory --reload
+```
+
+Run the checks:
+
+```text
 pytest -q
 ruff check app tests
 mypy app
 ```
 
-Run locally with real variables loaded in the shell:
+Never commit `.env` or real vendor credentials.
 
-```text
-uvicorn app.main:app --factory --reload
-```
+## Endpoints
 
-Never commit `.env` or vendor credentials. Use a non-production Mem0 vault for
-smoke testing. GPT editor setup is in `gpt/manual_setup_checklist.md`.
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Health check |
+| `GET /privacy` | Privacy notice |
+| `POST /v1/memories/search` | Search memories |
+| `POST /v1/memories` | Add a memory |
+| `POST /v1/memory-changes/preview` | Preview an update or deletion |
+| `POST /v1/memory-changes/confirm` | Confirm an update or deletion |
 
-## Deployment
-
-Deploy the Dockerfile to Railway as one Linux replica, set `$PORT`, and provide
-all variables from `.env.example` through Railway Variables. Production docs
-are disabled; `/health` and `/privacy` remain public. Do not deploy until the
-live bearer-key and later-turn preview/confirm smoke test passes. Anyone who
-obtains the key can access the shared vault, so rotate
-it immediately if exposed.
+See [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md), and
+[IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md) for additional project
+documentation.
