@@ -65,7 +65,11 @@ class Mem0Client:
         self._http = http_client
         self._owns_http = http_client is None
         self._base_url = base_url.rstrip("/")
-        self._headers = {"Authorization": f"Token {api_key}", "Content-Type": "application/json"}
+        self._headers = {
+            "Authorization": f"Token {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
         self._server_metadata = dict(server_metadata or {})
         self._poll_timeout = poll_timeout
         self._poll_interval = poll_interval
@@ -168,7 +172,7 @@ class Mem0Client:
             "metadata": {**(metadata or {}), **self._server_metadata},
         }
         try:
-            response = await self._request("POST", "/v3/memories/", json=body)
+            response = await self._request("POST", "/v3/memories/add/", json=body)
         except (httpx.TimeoutException, httpx.TransportError):
             return Mem0Result(Mem0Status.UNKNOWN)
         except httpx.HTTPStatusError as exc:
@@ -195,7 +199,7 @@ class Mem0Client:
         deadline = time.monotonic() + self._poll_timeout
         while time.monotonic() < deadline:
             try:
-                response = await self._request("GET", f"/v1/events/{event_id}/")
+                response = await self._request("GET", f"/v1/event/{event_id}/")
             except (httpx.TimeoutException, httpx.TransportError):
                 return Mem0Result(Mem0Status.UNKNOWN)
             payload = response.json()

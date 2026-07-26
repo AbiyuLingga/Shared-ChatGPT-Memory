@@ -34,7 +34,7 @@ async def test_add_polls_event_without_retrying_post():
     calls = []
 
     async def handler(request: httpx.Request) -> httpx.Response:
-        calls.append(request.method)
+        calls.append((request.method, request.url.path))
         if request.method == "POST":
             return httpx.Response(202, json={"event_id": "e1"})
         return httpx.Response(200, json={"status": "SUCCEEDED"})
@@ -44,7 +44,10 @@ async def test_add_polls_event_without_retrying_post():
         result = await client.add("hello", {"source": "server"})
 
     assert result.status is Mem0Status.SUCCEEDED
-    assert calls == ["POST", "GET"]
+    assert calls == [
+        ("POST", "/v3/memories/add/"),
+        ("GET", "/v1/event/e1/"),
+    ]
 
 
 @pytest.mark.asyncio
